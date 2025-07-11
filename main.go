@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/nlanzo/gator/internal/config"
 )
@@ -13,13 +14,22 @@ func main() {
 		log.Fatalf("Error reading config: %v", err)
 	}
 	fmt.Printf("Read config: %+v\n", cfg)
-	err = cfg.SetUser("nlanzo")
-	if err != nil {
-		log.Fatalf("Error setting user: %v", 	err)
+	app_state := &state{
+		cfg: &cfg,
 	}
-	cfg, err = config.Read()
-	if err != nil {
-		log.Fatalf("Error reading config after set user: %v", err)
+
+	commands := &commands{
+		name_to_function: make(map[string]func(*state, command) error),
 	}
-	fmt.Printf("Read config after set user: %+v\n", cfg)
+	commands.register("login", handlerLogin)
+
+	args := os.Args[1:]
+	if len(args) < 2 {
+		fmt.Println("Usage: gator <command> <args...>")
+		os.Exit(1)
+	}
+	err = commands.run(app_state, command{name: args[0], args: args[1:]})
+	if err != nil {
+		log.Fatalf("Error running command: %v", err)
+	}
 }
