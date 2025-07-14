@@ -37,6 +37,9 @@ func handlerAddFeed(s *state, cmd command) error {
 	fmt.Printf("Feed Created At: %s\n", newFeedRecord.CreatedAt)
 	fmt.Printf("Feed Updated At: %s\n", newFeedRecord.UpdatedAt)
 
+
+	handlerFollowFeed(s, command{Args: []string{cmd.Args[1]}})
+	fmt.Printf("Followed feed %s for user %s\n", cmd.Args[1], userName)
 	return nil
 }
 
@@ -62,3 +65,4 @@ func handlerListFeeds(s *state, cmd command) error {
 
 	return nil
 }
+
