@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/nlanzo/gator/internal/database"
 )
 
@@ -17,15 +18,10 @@ func handlerAddFeed(s *state, cmd command) error {
 		return fmt.Errorf("failed to get user: %v", err)
 	}
 
-	// fetch the feed into the RSSFeed struct
-	feed, err := fetchFeed(context.Background(), cmd.Args[1])
-	if err != nil {
-		return fmt.Errorf("failed to fetch feed: %v", err)
-	}
-
 	// insert the feed into the database
 	newFeedRecord, err := s.db.CreateFeed(context.Background(), database.CreateFeedParams{
-		Name:   feed.Channel.Title,
+		ID:   uuid.New(),
+		Name:   cmd.Args[0],
 		Url:    cmd.Args[1],
 		UserID: user.ID,
 	})
@@ -40,6 +36,29 @@ func handlerAddFeed(s *state, cmd command) error {
 	fmt.Printf("Feed User ID: %s\n", newFeedRecord.UserID)
 	fmt.Printf("Feed Created At: %s\n", newFeedRecord.CreatedAt)
 	fmt.Printf("Feed Updated At: %s\n", newFeedRecord.UpdatedAt)
+
+	return nil
+}
+
+func handlerListFeeds(s *state, cmd command) error {
+	feeds, err := s.db.GetAllFeeds(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get feeds: %v", err)
+	}
+
+	if len(feeds) == 0 {
+		fmt.Println("No feeds found")
+		return nil
+	}
+
+	fmt.Printf("Found %d feeds:\n", len(feeds))
+	for _, feed := range feeds {
+		user, err := s.db.GetUserByID(context.Background(), feed.UserID)	
+		if err != nil {
+			return fmt.Errorf("failed to get user: %v", err)
+		}
+		fmt.Printf("Name: %s, URL: %s, User: %s\n", feed.Name, feed.Url, user.Name)
+	}
 
 	return nil
 }
