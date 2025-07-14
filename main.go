@@ -24,9 +24,7 @@ func main() {
 		log.Fatalf("Error reading config: %v", err)
 	}
 
-	app_state := &state{
-		cfg: &cfg,
-	}
+	
 
 	db, err := sql.Open("postgres", cfg.DBURL)
 	if err != nil {
@@ -35,7 +33,11 @@ func main() {
 	defer db.Close()
 	
 	dbQueries := database.New(db)
-	app_state.db = dbQueries
+	
+	app_state := &state{
+		db: dbQueries,
+		cfg: &cfg,
+	}
 
 	commands := &commands{
 		registeredCommands: make(map[string]func(*state, command) error),
