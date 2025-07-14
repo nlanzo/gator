@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -13,6 +14,7 @@ type Config struct {
 	DBURL string `json:"db_url"`
 	CurrentUserName string `json:"current_user_name"`
 }
+
 
 func get_config_file_path() (string, error) {
 	home_dir, err := os.UserHomeDir()
@@ -28,6 +30,7 @@ func Read() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
+	fmt.Printf("json_file_path: %s\n", json_file_path)
 
 	json_file, err := os.Open(json_file_path)
 	if err != nil {

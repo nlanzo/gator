@@ -1,7 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/nlanzo/gator/internal/database"
 )
 
 func handlerLogin(s *state, cmd command) error {
@@ -9,12 +14,44 @@ func handlerLogin(s *state, cmd command) error {
 		return fmt.Errorf("usage: %s <username>", cmd.Name)
 	}
 
-	err := s.cfg.SetUser(cmd.Args[0])
+	// check if user exists
+	user, err := s.db.GetUser(context.Background(), cmd.Args[0])
+	if err != nil {
+		return fmt.Errorf("user %s not found", cmd.Args[0])
+	}
+
+	err = s.cfg.SetUser(user.Name)
 	if err != nil {
 		return fmt.Errorf("error setting user: %v", err)
 	}
 
 	fmt.Printf("Logged in as %s\n", s.cfg.CurrentUserName)
 	
+	return nil
+}
+
+func handlerRegister(s *state, cmd command) error {
+	if len(cmd.Args) != 1 {
+		return fmt.Errorf("usage: %s <username>", cmd.Name)
+	}
+
+	user, err := s.db.CreateUser(context.Background(), database.CreateUserParams{
+		ID: uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name: cmd.Args[0],
+	})
+	if err != nil {
+		return fmt.Errorf("error creating user: %v", err)
+	}
+	// set current user to the new user
+	err = s.cfg.SetUser(user.Name)
+	if err != nil {
+		return fmt.Errorf("error setting user: %v", err)
+	}
+
+	fmt.Printf("User created: %s\n", s.cfg.CurrentUserName)
+	fmt.Printf("DEBUG: Logged in as %s\n", user)
+
 	return nil
 }
