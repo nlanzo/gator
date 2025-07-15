@@ -46,12 +46,13 @@ func main() {
 	commands.register("register", handlerRegister)
 	commands.register("reset", handlerReset)
 	commands.register("users", handlerListUsers)
-	commands.register("agg", middlewareLoggedIn(handlerAgg))
+	commands.register("agg", handlerAgg)
 	commands.register("addfeed", middlewareLoggedIn(handlerAddFeed))
 	commands.register("feeds", handlerListFeeds)
 	commands.register("follow", middlewareLoggedIn(handlerFollowFeed))
 	commands.register("following", middlewareLoggedIn(handlerListFollowedFeeds))
 	commands.register("unfollow", middlewareLoggedIn(handlerUnfollowFeed))
+	commands.register("browse", middlewareLoggedIn(handlerBrowse))
 	
 	if len(os.Args) < 2 {
 		log.Fatal("Usage: gator <command> <args...>")

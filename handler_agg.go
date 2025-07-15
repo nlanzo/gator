@@ -2,14 +2,16 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/nlanzo/gator/internal/database"
 )
 
-func handlerAgg(s *state, cmd command, user database.User) error {
+func handlerAgg(s *state, cmd command) error {
 	if len(cmd.Args) < 1 || len(cmd.Args) > 2 {
 		return fmt.Errorf("usage: agg <time_between_requests>")
 	}
@@ -58,7 +60,29 @@ func scrapeFeed(db *database.Queries, feed database.Feed) {
 
 
 	for _, item := range feedData.Channel.Item {
-		fmt.Printf("* %s\n", item.Title)
+		publishedAt := sql.NullTime{}
+		if t, err := time.Parse(time.RFC1123Z, item.PubDate); err == nil {
+			publishedAt = sql.NullTime{
+				Time:  t,
+				Valid: true,
+			}
+		}
+
+		_, err = db.CreatePost(context.Background(), database.CreatePostParams{
+			Title: item.Title,
+			Url: item.Link,
+			Description: sql.NullString{String: item.Description, Valid: true},
+			PublishedAt: publishedAt,
+			FeedID: feed.ID,
+		})
+		if err != nil {
+			if strings.Contains(err.Error(), "duplicate key value violates unique constraint") {
+				continue
+			}
+			log.Printf("failed to create post %s: %v", item.Title, err)
+			continue
+		}
+		fmt.Printf("Created post %s\n", item.Title)
 	}
 
 	fmt.Printf("Fetched %d items from %s\n", len(feedData.Channel.Item), feed.Name)
