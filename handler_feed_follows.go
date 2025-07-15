@@ -7,7 +7,7 @@ import (
 	"github.com/nlanzo/gator/internal/database"
 )
 
-func handlerFollowFeed(s *state, cmd command) error {
+func handlerFollowFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.Args) < 1 {
 		return fmt.Errorf("usage: followfeed <feed_url>")
 	}
@@ -16,11 +16,6 @@ func handlerFollowFeed(s *state, cmd command) error {
 	feed, err := s.db.GetFeedByURL(context.Background(), feedURL)
 	if err != nil {
 		return fmt.Errorf("failed to get feed: %v", err)
-	}
-
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return fmt.Errorf("failed to get user: %v", err)
 	}
 
 	_, err = s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
@@ -37,22 +32,18 @@ func handlerFollowFeed(s *state, cmd command) error {
 	return nil
 }
 
-func handlerListFollowedFeeds(s *state, cmd command) error {
-	user, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return fmt.Errorf("failed to get user: %v", err)
-	}
+func handlerListFollowedFeeds(s *state, cmd command, user database.User) error {
 	feeds, err := s.db.GetFeedFollowsForUser(context.Background(), user.ID)
 	if err != nil {
 		return fmt.Errorf("failed to get feeds: %v", err)
 	}
 
 	if len(feeds) == 0 {
-		fmt.Printf("No feeds followed by %s\n", s.cfg.CurrentUserName)
+		fmt.Printf("No feeds followed by %s\n", user.Name)
 		return nil
 	}
 
-	fmt.Printf("Found %d feeds followed by %s:\n", len(feeds), s.cfg.CurrentUserName)
+	fmt.Printf("Found %d feeds followed by %s:\n", len(feeds), user.Name)
 	for _, feed := range feeds {
 		fmt.Printf("Feed: %s\n", feed.FeedName)
 	}
