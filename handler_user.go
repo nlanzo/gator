@@ -51,7 +51,6 @@ func handlerRegister(s *state, cmd command) error {
 	}
 
 	fmt.Printf("User created: %s\n", s.cfg.CurrentUserName)
-	fmt.Printf("DEBUG: Logged in as %s\n", user)
 
 	return nil
 }

@@ -2,7 +2,6 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -30,7 +29,6 @@ func Read() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	fmt.Printf("json_file_path: %s\n", json_file_path)
 
 	json_file, err := os.Open(json_file_path)
 	if err != nil {
